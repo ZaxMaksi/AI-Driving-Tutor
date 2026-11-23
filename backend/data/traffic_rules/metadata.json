@@ -1,0 +1,14 @@
+{
+  "title": "Правила дорожнього руху України",
+  "document_number": "1306",
+  "document_type": "Постанова Кабінету Міністрів України",
+  "adoption_date": "2001-10-10",
+  "edition_date": "2022-02-16",
+  "fetch_date": "2026-11-23",
+  "source_url": "https://zakon.rada.gov.ua/laws/show/1306-2001-%D0%BF#Text",
+  "status": "Чинний",
+  "sha256_original": "afdd55a798542848c65e16ded798c5c2e96673bbe601d7524968b57ca9c6140e",
+  "sections_count": 34,
+  "numbered_points_count": 297,
+  "file_path": "backend/data/traffic_rules/traffic_rules.md"
+}
