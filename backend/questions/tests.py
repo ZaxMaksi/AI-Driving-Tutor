@@ -206,3 +206,36 @@ class QuestionsAPITests(APITestCase):
             if answer["is_correct"]:
                 correct_found = True
         self.assertTrue(correct_found)
+
+
+class SeedOfficialQuestionsCommandTests(TestCase):
+    def setUp(self):
+        self.doc = RuleDocument.objects.create(
+            title="ПДР України",
+            document_number="1306",
+            is_active=True,
+        )
+        # Create all needed sections so seed command can attach
+        for num in [1, 2, 8, 10, 12, 14, 15, 16, 18, 19, 20, 31, 33, 34]:
+            RuleSection.objects.get_or_create(
+                document=self.doc,
+                number=num,
+                defaults={"title": f"Розділ {num}"},
+            )
+
+    def test_seed_command_creates_questions_and_is_idempotent(self):
+        from io import StringIO
+        from django.core.management import call_command
+
+        out1 = StringIO()
+        call_command("seed_official_questions", stdout=out1)
+        initial_count = Question.objects.filter(question_type=Question.QuestionType.OFFICIAL).count()
+        self.assertGreaterEqual(initial_count, 20)
+
+        # Idempotence check
+        out2 = StringIO()
+        call_command("seed_official_questions", stdout=out2)
+        second_count = Question.objects.filter(question_type=Question.QuestionType.OFFICIAL).count()
+        self.assertEqual(initial_count, second_count)
+        self.assertIn("0 створено", out2.getvalue())
+

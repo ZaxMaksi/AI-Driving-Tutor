@@ -130,3 +130,25 @@ class AITutorTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("покажчиком повороту", response.data["answer"])
+
+    @patch("ai_tutor.services.get_gemini_client")
+    def test_gemini_api_failure_handled_gracefully(self, mock_client_func):
+        mock_client = MagicMock()
+        mock_client.models.generate_content.side_effect = Exception("Gemini API connection error")
+        mock_client_func.return_value = mock_client
+
+        with self.assertRaises(Exception):
+            GeminiTutorService.consult(
+                user_query="Чи можна розвертатися?",
+                section_id=self.section.id,
+                user=self.user,
+            )
+
+        # Перевірка запису невдалого звернення до журналу аудиту
+        failed_log = AIGenerationLog.objects.filter(
+            request_type=AIGenerationLog.RequestType.CONSULTATION,
+            is_successful=False,
+        ).first()
+        self.assertIsNotNone(failed_log)
+        self.assertIn("Gemini API connection error", failed_log.error_message)
+

@@ -6,11 +6,12 @@
 
 ## Поточний статус проекту
 
-- **Рівень готовності:** **Бекенд, база даних та інтеграція ШІ повністю завершені (100%)**.
-- **Пройдено етапів з ROADMAP:** **8 з 12** (Етапи 1–8 виконано).
-- **Наступний етап:** **Етап 9 — Розробка Frontend (React + TypeScript + Vite)**.
-- **Тестове покриття:** **36 автоматичних тестів** проходять успішно (100% тест-сьюту).
-- **OpenAPI / Swagger:** Специфікація API без жодної помилки або попередження.
+- **Рівень готовності:** **Проект повністю реалізовано (100% готовність до демонстрації)**.
+- **Пройдено етапів з ROADMAP:** **12 з 12** (Усі етапи виконано в повному обсязі).
+- **Банк питань:** Наповнено базу офіційних екзаменаційних питань ПДР України (`seed_official_questions`).
+- **Тестове покриття:** **41 автоматичний тест** (100% проходження) + наскрізний End-to-End сценарій.
+- **Frontend збірка:** TypeScript + Vite білдяться без жодної помилки (`dist/` сформовано успішно).
+- **OpenAPI / Swagger:** Повна інтерактивна специфікація API без жодної помилки або попередження.
 
 ---
 
@@ -25,6 +26,15 @@
 - **Документація API:** drf-spectacular (OpenAPI 3.0 / Swagger UI / Redoc)
 - **Обробка зображень:** Pillow
 - **Керування конфігурацією:** django-environ
+
+### Frontend
+- **React:** 19
+- **TypeScript:** 5.8 / 7
+- **Vite:** 8.3
+- **Стилізація:** Tailwind CSS 4
+- **Іконки:** Lucide React
+- **Маршрутизація:** React Router DOM 7
+- **HTTP-клієнт:** Axios з автоматичним оновленням JWT-токенів (interceptors)
 
 ### ШІ-інтеграція
 - **SDK:** `google-genai` (v3.6.1)
@@ -65,6 +75,7 @@ docker compose up -d
 ```powershell
 python backend/manage.py migrate
 python backend/manage.py import_traffic_rules
+python backend/manage.py seed_official_questions
 ```
 
 ### 4. Запуск тестів
@@ -72,10 +83,17 @@ python backend/manage.py import_traffic_rules
 python backend/manage.py test users traffic_rules questions testing progress ai_tutor
 ```
 
-### 5. Запуск сервера розробки
+### 5. Запуск сервера розробки (Backend)
 ```powershell
 python backend/manage.py runserver 8000
 ```
+
+### 6. Запуск клієнтського додатку (Frontend)
+```powershell
+cd frontend
+npm run dev
+```
+Клієнтський інтерфейс буде доступний за адресою: `http://localhost:5173/` (з налаштованим проксі на бекенд).
 
 ---
 

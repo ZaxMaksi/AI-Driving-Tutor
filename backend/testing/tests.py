@@ -158,3 +158,94 @@ class TestingModuleTests(APITestCase):
         )
         response = self.client.get(detail_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cannot_answer_completed_session(self):
+        self.client.force_authenticate(user=self.user)
+        session = TestSession.objects.create(
+            user=self.user,
+            mode=TestSession.Mode.BY_TOPIC,
+            section=self.section,
+            total_questions=2,
+            status=TestSession.Status.COMPLETED,
+        )
+        q = self.questions[0]
+        opt = q.answers.first()
+
+        answer_url = reverse("testing:submit-answer", kwargs={"pk": session.id})
+        response = self.client.post(
+            answer_url,
+            {"question_id": q.id, "selected_option_id": opt.id},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("вже завершена", str(response.data))
+
+    def test_cannot_submit_option_from_another_question(self):
+        self.client.force_authenticate(user=self.user)
+        session = TestSession.objects.create(
+            user=self.user,
+            mode=TestSession.Mode.BY_TOPIC,
+            section=self.section,
+            total_questions=2,
+        )
+        q1 = self.questions[0]
+        q2 = self.questions[1]
+        wrong_question_opt = q2.answers.first()
+
+        answer_url = reverse("testing:submit-answer", kwargs={"pk": session.id})
+        response = self.client.post(
+            answer_url,
+            {"question_id": q1.id, "selected_option_id": wrong_question_opt.id},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("не належить даному питанню", str(response.data))
+
+    def test_exam_pass_boundary_conditions(self):
+        # Створюємо 20 окремих питань
+        exam_questions = []
+        for i in range(1, 21):
+            q = Question.objects.create(
+                text=f"Екзаменаційне питання #{i}?",
+                section=self.section,
+                question_type=Question.QuestionType.OFFICIAL,
+                ai_status=Question.AIStatus.APPROVED,
+            )
+            opt_c = AnswerOption.objects.create(question=q, text="Правильний", is_correct=True, order=1)
+            opt_w = AnswerOption.objects.create(question=q, text="Помилковий", is_correct=False, order=2)
+            exam_questions.append((q, opt_c, opt_w))
+
+        # Іспит з 2 помилками -> складено
+        session_pass = TestSession.objects.create(
+            user=self.user,
+            mode=TestSession.Mode.EXAM,
+            total_questions=20,
+            correct_answers_count=18,
+            incorrect_answers_count=2,
+        )
+        for i, (q, opt_c, opt_w) in enumerate(exam_questions):
+            UserAnswer.objects.create(
+                session=session_pass,
+                question=q,
+                selected_option=opt_w if i < 2 else opt_c,
+                is_correct=(i >= 2),
+            )
+        from testing.services import TestSessionService
+        TestSessionService.finish_session(session_pass)
+        self.assertTrue(session_pass.is_passed)
+
+        # Іспит з 3 помилками -> не складено
+        session_fail = TestSession.objects.create(
+            user=self.user,
+            mode=TestSession.Mode.EXAM,
+            total_questions=20,
+            correct_answers_count=17,
+            incorrect_answers_count=3,
+        )
+        for i, (q, opt_c, opt_w) in enumerate(exam_questions):
+            UserAnswer.objects.create(
+                session=session_fail,
+                question=q,
+                selected_option=opt_w if i < 3 else opt_c,
+                is_correct=(i >= 3),
+            )
+        TestSessionService.finish_session(session_fail)
+        self.assertFalse(session_fail.is_passed)
