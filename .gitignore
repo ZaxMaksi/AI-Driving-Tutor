@@ -120,3 +120,6 @@ postgres-data/
 
 *.orig
 *.rej
+
+# AI Agent auxiliary files
+ROADMAP.md

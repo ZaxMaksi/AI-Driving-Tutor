@@ -109,6 +109,5 @@ npm run dev
 
 ## Детальні документи проекту
 
-- [ROADMAP.md](ROADMAP.md) — генеральний план розвитку проекту та статус усіх етапів.
 - [docs/architecture.md](docs/architecture.md) — повна ER-діаграма системи та архітектурні принципи.
 - [docs/api.md](docs/api.md) — довідник REST API маршрутів.
